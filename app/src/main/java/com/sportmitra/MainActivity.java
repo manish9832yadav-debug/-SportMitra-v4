@@ -13,9 +13,19 @@ import java.util.Random;
 public class MainActivity extends Activity {
 
     LinearLayout layout;
-    TextView title;
+
     int score = 0;
+    int wickets = 0;
     int balls = 0;
+
+    int target = 0;
+    boolean secondInnings = false;
+
+    TextView scoreText;
+    TextView overText;
+    TextView resultText;
+
+    Random random = new Random();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,125 +38,191 @@ public class MainActivity extends Activity {
         layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setGravity(Gravity.CENTER);
-        layout.setPadding(35, 35, 35, 35);
+        layout.setPadding(30, 30, 30, 30);
         layout.setBackgroundColor(Color.WHITE);
 
-        title = new TextView(this);
+        TextView title = new TextView(this);
         title.setText("🏏 SportMitra");
         title.setTextSize(34);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         title.setGravity(Gravity.CENTER);
 
         TextView welcome = new TextView(this);
-        welcome.setText("\nWelcome to SportMitra!\n\nPlay • Score • Win 🏆");
-        welcome.setTextSize(21);
+        welcome.setText("\n🏆 Cricket Challenge\n\nScore • Play • Win");
+        welcome.setTextSize(22);
         welcome.setGravity(Gravity.CENTER);
 
-        Button playButton = new Button(this);
-        playButton.setText("🎮 PLAY CRICKET");
+        Button play = new Button(this);
+        play.setText("🎮 START MATCH");
 
-        Button profileButton = new Button(this);
-        profileButton.setText("👤 PROFILE");
-
-        Button settingsButton = new Button(this);
-        settingsButton.setText("⚙️ SETTINGS");
-
-        playButton.setOnClickListener(v -> startGame());
-
-        profileButton.setOnClickListener(v -> {
-            welcome.setText("👤 PROFILE\n\nPlayer: SportMitra Player\nLevel: 1\nWins: 0");
-        });
-
-        settingsButton.setOnClickListener(v -> {
-            welcome.setText("⚙️ SETTINGS\n\nSound: ON\nDifficulty: Easy");
-        });
+        play.setOnClickListener(v -> startFirstInnings());
 
         layout.addView(title);
         layout.addView(welcome);
-        layout.addView(playButton);
-        layout.addView(profileButton);
-        layout.addView(settingsButton);
+        layout.addView(play);
 
         setContentView(layout);
     }
 
-    void startGame() {
+    void startFirstInnings() {
 
         score = 0;
+        wickets = 0;
         balls = 0;
+        target = 0;
+        secondInnings = false;
+
+        showGameScreen();
+    }
+
+    void showGameScreen() {
 
         layout.removeAllViews();
 
-        TextView gameTitle = new TextView(this);
-        gameTitle.setText("🏏 CRICKET MATCH");
-        gameTitle.setTextSize(30);
-        gameTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        gameTitle.setGravity(Gravity.CENTER);
+        TextView title = new TextView(this);
 
-        TextView scoreText = new TextView(this);
-        scoreText.setText("Score: 0");
+        if (secondInnings) {
+            title.setText("🏏 2nd INNINGS");
+        } else {
+            title.setText("🏏 1st INNINGS");
+        }
+
+        title.setTextSize(28);
+        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+
+        scoreText = new TextView(this);
         scoreText.setTextSize(25);
         scoreText.setGravity(Gravity.CENTER);
 
-        TextView ballsText = new TextView(this);
-        ballsText.setText("Balls: 0 / 6");
-        ballsText.setTextSize(20);
-        ballsText.setGravity(Gravity.CENTER);
+        overText = new TextView(this);
+        overText.setTextSize(20);
+        overText.setGravity(Gravity.CENTER);
 
-        TextView resultText = new TextView(this);
-        resultText.setText("\nBatting start karo!");
-        resultText.setTextSize(21);
+        resultText = new TextView(this);
+        resultText.setTextSize(20);
         resultText.setGravity(Gravity.CENTER);
 
-        Button batButton = new Button(this);
-        batButton.setText("🏏 BAT!");
+        Button bat = new Button(this);
+        bat.setText("🏏 BAT");
 
-        Button homeButton = new Button(this);
-        homeButton.setText("🏠 HOME");
+        Button home = new Button(this);
+        home.setText("🏠 HOME");
 
-        batButton.setOnClickListener(v -> {
+        layout.addView(title);
+        layout.addView(scoreText);
+        layout.addView(overText);
+        layout.addView(resultText);
+        layout.addView(bat);
+        layout.addView(home);
 
-            if (balls >= 6) {
-                resultText.setText("🏆 GAME OVER!\nFinal Score: " + score);
-                return;
-            }
+        updateScore();
 
-            balls++;
+        bat.setOnClickListener(v -> playBall());
+
+        home.setOnClickListener(v -> showHome());
+    }
+
+    void playBall() {
+
+        if (balls >= 12 || wickets >= 3) {
+            return;
+        }
+
+        balls++;
+
+        int event = random.nextInt(10);
+
+        if (event == 0) {
+
+            wickets++;
+
+            resultText.setText("😮 OUT!");
+
+        } else {
 
             int[] runs = {0, 1, 2, 3, 4, 6};
-            int run = runs[new Random().nextInt(runs.length)];
+
+            int run = runs[random.nextInt(runs.length)];
 
             score += run;
-
-            scoreText.setText("Score: " + score);
-            ballsText.setText("Balls: " + balls + " / 6");
 
             if (run == 6) {
                 resultText.setText("🔥 SIX!");
             } else if (run == 4) {
                 resultText.setText("🎉 FOUR!");
             } else if (run == 0) {
-                resultText.setText("😮 DOT BALL!");
+                resultText.setText("• DOT BALL");
             } else {
                 resultText.setText("👍 " + run + " RUN");
             }
+        }
 
-            if (balls == 6) {
+        updateScore();
+
+        if (secondInnings && score >= target) {
+
+            resultText.setText(
+                    "🏆 YOU WIN!\nTarget: " + target
+            );
+
+            return;
+        }
+
+        if (balls >= 12 || wickets >= 3) {
+
+            if (!secondInnings) {
+
+                target = score + 1;
+
                 resultText.setText(
-                    "🏆 GAME OVER!\nFinal Score: " + score
+                        "🏏 1st Innings Over!\nTarget: " + target
+                );
+
+                Button next = new Button(this);
+                next.setText("▶️ START 2nd INNINGS");
+
+                layout.addView(next);
+
+                next.setOnClickListener(v -> {
+
+                    score = 0;
+                    wickets = 0;
+                    balls = 0;
+
+                    secondInnings = true;
+
+                    showGameScreen();
+                });
+
+            } else {
+
+                resultText.setText(
+                        "😔 YOU LOSE!\nTarget: " + target +
+                        "\nYour Score: " + score
                 );
             }
-        });
+        }
+    }
 
-        homeButton.setOnClickListener(v -> showHome());
+    void updateScore() {
 
-        layout.addView(gameTitle);
-        layout.addView(scoreText);
-        layout.addView(ballsText);
-        layout.addView(resultText);
-        layout.addView(batButton);
-        layout.addView(homeButton);
+        scoreText.setText(
+                "Score: " + score + "/" + wickets
+        );
 
-        setContentView(layout);
+        int overs = balls / 6;
+        int ball = balls % 6;
+
+        overText.setText(
+                "Overs: " + overs + "." + ball
+        );
+
+        if (secondInnings) {
+
+            resultText.setText(
+                    "🎯 Target: " + target
+            );
+        }
     }
 }
