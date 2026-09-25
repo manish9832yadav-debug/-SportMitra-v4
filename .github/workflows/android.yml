@@ -38,3 +38,8 @@ jobs:
       - name: Build SportMitra
         run: |
           gradle assembleDebug
+       - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SportMitra-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
